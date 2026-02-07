@@ -1,0 +1,26 @@
+# --- Core ML / data ---
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+tqdm
+rich
+
+# --- Training / DL helpers (works great with PyTorch) ---
+torchmetrics
+
+# --- Hugging Face (common for NLP/LLM work) ---
+transformers
+datasets
+accelerate
+tokenizers
+safetensors
+
+# --- App/dev niceties ---
+python-dotenv
+pydantic
+pyyaml
+jupyter
+ipykernel
+pytest
