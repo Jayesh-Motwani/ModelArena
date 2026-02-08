@@ -28,9 +28,6 @@ except Exception:
     ToTensorV2 = None
 
 
-# -------------------------
-# Reproducibility
-# -------------------------
 def seed_everything(seed: int = 42):
     random.seed(seed)
     np.random.seed(seed)
@@ -40,9 +37,7 @@ def seed_everything(seed: int = 42):
     torch.backends.cudnn.benchmark = True
 
 
-# -------------------------
 # Config
-# -------------------------
 @dataclass
 class CFG:
     data_root: str = "videos"
@@ -80,9 +75,7 @@ class CFG:
     seed: int = 42
 
 
-# -------------------------
 # Video utilities
-# -------------------------
 def list_videos(folder: str) -> List[str]:
     exts = ("*.mp4", "*.avi", "*.mov", "*.mkv", "*.webm")
     files = []
@@ -133,9 +126,7 @@ def safe_read_video_frames_cv2(video_path: str, num_frames: int) -> List[np.ndar
     return frames[:num_frames]
 
 
-# -------------------------
-# Face cropper (MTCNN)
-# -------------------------
+# Face cropper (MTCNN)-
 class FaceCropper:
     def __init__(self, device: str, img_size: int, margin: float, min_face_size: int):
         self.mtcnn = MTCNN(keep_all=True, device=device)
@@ -191,9 +182,7 @@ class FaceCropper:
         return crop
 
 
-# -------------------------
 # Transforms
-# -------------------------
 def build_transforms(img_size: int, train: bool):
     if A is None:
         # minimal torch conversion if albumentations not installed
@@ -231,9 +220,6 @@ def build_transforms(img_size: int, train: bool):
     return _apply
 
 
-# -------------------------
-# Dataset
-# -------------------------
 class VideoFaceDataset(Dataset):
     def __init__(
         self,
@@ -272,9 +258,7 @@ class VideoFaceDataset(Dataset):
         return x, y
 
 
-# -------------------------
 # Model: CNN per-frame + temporal attention pooling
-# -------------------------
 class TemporalAttnPool(nn.Module):
     def __init__(self, feat_dim: int):
         super().__init__()
@@ -324,9 +308,7 @@ class DeepfakeNet(nn.Module):
         return logits
 
 
-# -------------------------
 # Loss: label smoothing CE
-# -------------------------
 class LabelSmoothingCE(nn.Module):
     def __init__(self, smoothing: float = 0.0):
         super().__init__()
@@ -342,18 +324,14 @@ class LabelSmoothingCE(nn.Module):
         return torch.mean(torch.sum(-true_dist * log_probs, dim=-1))
 
 
-# -------------------------
 # Metrics
-# -------------------------
 @torch.no_grad()
 def accuracy_from_logits(logits: torch.Tensor, y: torch.Tensor) -> float:
     pred = torch.argmax(logits, dim=1)
     return (pred == y).float().mean().item()
 
 
-# -------------------------
 # Training / Validation
-# -------------------------
 def train_one_epoch(model, loader, optimizer, scaler, loss_fn, device, cfg: CFG):
     model.train()
     running_loss = 0.0
@@ -405,9 +383,6 @@ def validate(model, loader, loss_fn, device):
     return running_loss / max(1, len(loader)), running_acc / max(1, len(loader))
 
 
-# -------------------------
-# Build train dataframe
-# -------------------------
 def build_train_df(cfg: CFG) -> pd.DataFrame:
     real = list_videos(cfg.train_real_dir)
     fake = list_videos(cfg.train_fake_dir)
@@ -420,9 +395,6 @@ def build_train_df(cfg: CFG) -> pd.DataFrame:
     return df
 
 
-# -------------------------
-# Main train function
-# -------------------------
 def run_train(cfg: CFG):
     os.makedirs(cfg.out_dir, exist_ok=True)
     seed_everything(cfg.seed)
@@ -501,9 +473,6 @@ def run_train(cfg: CFG):
     print(f"Best model at: {best_path}")
 
 
-# -------------------------
-# Inference
-# -------------------------
 @torch.no_grad()
 def predict_video(model: nn.Module, x: torch.Tensor, device: str) -> Tuple[int, float]:
     """
@@ -643,9 +612,6 @@ def run_finetune_full(cfg: CFG, resume_path: str, finetune_epochs: int):
     print(f"Saved final finetuned model: {final_path}")
 
 
-# -------------------------
-# CLI
-# -------------------------
 def main():
     import argparse
 
